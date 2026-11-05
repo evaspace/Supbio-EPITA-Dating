@@ -1,3 +1,4 @@
+import { landing, hydrateLanding } from './landing.js';
 const root = document.getElementById('root');
 const toastEl = document.getElementById('toast');
 const SCHOOLS = ['EPITA', 'SupBiotech', 'ESME', 'ISG', 'IPSA'];
@@ -176,7 +177,7 @@ function screenHome() {
   const freeCard = free.length ? `<div class="card"><h2>Matchs sans créneau</h2><p class="sub">${d?.open ? 'Choisis un lieu et une heure avec chacun.' : 'Tu pourras proposer un créneau à l’ouverture du prochain drop.'}</p><div class="list">${free.slice(0, 4).map(m => `<div class="item">${avatar(m.profile)}<div><div class="t">${esc(m.profile.name)}</div><div class="s">${esc(m.profile.school)}</div></div><div class="acts">${d?.open ? `<button class="btn primary" data-act="offers" data-match="${esc(m.id)}">Proposer un créneau</button>` : ''}</div></div>`).join('')}</div></div>` : '';
   const dueAction = !state.style?.configured ? `<div class="notice">Choisis ton intention et ton style pour apparaître dans la découverte. <button class="btn plain" data-nav="profile">Compléter mon profil</button></div>` : '';
   return `${head('Cette semaine', '')}<div class="stack">${dueAction}
-    <section class="card"><div class="lead">${lead}</div><p class="muted" style="font-size:16px;margin-top:8px">${sub}</p><div class="row" style="margin-top:20px">${cta}</div>
+    <section class="card drop"><div class="lead">${lead}</div><p class="muted" style="font-size:16px;margin-top:8px">${sub}</p><div class="row" style="margin-top:20px">${cta}</div>
     <div class="figures"><div><b>${me.meetings ?? 0}</b><span>Rencontres validées</span></div><div><b>${me.reliability == null ? '–' : me.reliability + ' %'}</b><span>Fiabilité</span></div><div><b>${me.lapins ?? 0}</b><span>Lapins</span></div></div></section>
     <section class="card"><h2>La semaine</h2><p class="sub">Le drop s’ouvre le jeudi. Tes créneaux apparaissent le jour où ils ont lieu.</p>${week}</section>
     ${nextCard && freeCard ? `<div class="cols2">${nextCard}${freeCard}</div>` : nextCard + freeCard}</div>`;
@@ -302,7 +303,7 @@ function screenModeration() {
 }
 
 /* auth */
-function screenAuth() {
+function authForm() {
   const a = state.auth, mode = a.mode || 'login';
   const mark = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#b8336a"/><circle cx="16" cy="13" r="5" fill="#fbf7f8"/><rect x="14.5" y="19" width="3" height="7" fill="#fbf7f8"/></svg>';
   const schoolSel = `<label class="f">École<select class="in" name="school">${SCHOOLS.map(s => `<option ${a.school === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>`;
@@ -326,13 +327,11 @@ function screenAuth() {
       ${pw('Mot de passe', 'new-password')}
       <label class="check"><input type="checkbox" name="consent" required>J’ai 18 ans ou plus</label>
       <div class="row"><button class="btn primary" type="submit">Créer mon compte</button><button class="btn plain" type="button" data-auth="signup">Changer d’adresse</button></div></form>`;
-  return `<div class="auth"><div><div class="brand">${mark}Jeudi</div><h1>Un café plutôt qu’un chat</h1>
-    <p class="lede">Chaque jeudi soir, les créneaux de la semaine s’ouvrent. Tu matches, tu choisis un lieu du campus et une heure, puis tu viens.</p>
-    <ol><li>Ton profil est un dessin et un style, pas un feed</li><li>Le match débouche sur un créneau, pas sur une conversation</li><li>Les photos restent privées jusqu’au match</li></ol></div><div class="stack">${form}</div></div>`;
+  return form;
 }
 
 function render() {
-  if (!state.user) { root.innerHTML = screenAuth(); return; }
+  if (!state.user) { root.innerHTML = landing(authForm(), esc); hydrateLanding(); return; }
   const screens = { home: screenHome, discover: screenDiscover, matches: screenMatches, slots: screenSlots, ranks: screenRanks, profile: screenProfile, moderation: screenModeration };
   const keepScroll = window.scrollY;
   root.innerHTML = shell((screens[state.screen] || screenHome)());
@@ -484,6 +483,7 @@ const forms = {
   async prefs(f) {
     try { const r = await api('/api/me/preferences', 'PUT', { schools: [...f.querySelectorAll('[name=schools]:checked')].map(x => x.value), genders: [...f.querySelectorAll('[name=genders]:checked')].map(x => x.value), age_min: Number(f.age_min.value), age_max: Number(f.age_max.value), city: state.user.preferences.city || 'Toutes' }); state.user.preferences = r.preferences; toast('Filtres enregistrés'); } catch (e) { toast(e.message); }
   },
+  async cta(f) { state.auth = { mode: 'signup', step: 'email', email: f.email.value.trim().toLowerCase(), school: SCHOOLS.find(x => f.email.value.toLowerCase().endsWith('@' + ({ EPITA: 'epita.fr', SupBiotech: 'supbiotech.fr', ESME: 'esme.fr', ISG: 'isg.fr', IPSA: 'ipsa.fr' })[x])) }; render(); document.getElementById('join')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); },
   async validate(f) { await act(() => api(`/api/bookings/${f.dataset.id}/validate`, 'POST', { code: f.code.value }), 'Venue validée'); },
 };
 document.addEventListener('submit', e => { const f = e.target.closest('[data-form]'); if (f && forms[f.dataset.form]) { e.preventDefault(); forms[f.dataset.form](f); } });

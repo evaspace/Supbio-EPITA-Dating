@@ -2,6 +2,7 @@
    Grid arithmetic (desktop 1440): sidebar 240 + canvas 24 + 1152 + 24; two columns 564 + 24 gap + 564 = 1152;
    a 2fr/1fr row is 760 + 24 + 368 = 1152. One gap value, 24px, both directions. */
 @import url("./fonts.css");
+@import url("./landing.css");
 
 :root {
   --ground: #fbf7f8;
@@ -215,3 +216,56 @@ dialog h2 { margin-bottom: 12px; }
 }
 @media (min-width: 861px) { .bottom { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Loud and flat, in the spirit of Hoop, Yubo and Holy: heavy rounded type, flat saturated fields, one round shape language.
+   Tokens: ink #17120f, pink #ff6b9d, yellow #ffd84a, mint #5be3b0, orange #ff8a3d. No gradients, no shadows. */
+:root { --ground: #f4f2ef; --surface: #fff; --text: #17120f; --accent: #ff6b9d; --accent-soft: #ffe1ec; --accent-track: #ffc2d8; --accent-ink: #17120f; --radius-card: 28px; --radius-control: 999px; --y: #ffd84a; --m: #5be3b0; --o: #ff8a3d; --display: "Baloo 2", "DM Sans", sans-serif; }
+body { background: var(--ground); }
+.shell h1, .shell h2, .shell .lead, .shell .figures b, .shell .brand, .shell .tabs button, .shell .group { font-family: var(--display); }
+.shell h1 { font-weight: 800; font-size: 44px; line-height: 1; }
+.shell h2 { font-weight: 800; font-size: 24px; }
+.shell .lead { font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.01em; }
+.shell .figures b { font-weight: 800; font-size: 36px; }
+.shell .card { border-radius: 28px; padding: 28px; }
+.shell .btn { border-radius: 999px; height: 44px; padding: 0 20px; border: 2px solid var(--text); background: #fff; font-weight: 700; transition: transform .15s; }
+.shell .btn:hover { transform: translateY(-2px); background: #fff; }
+.shell .btn.primary { background: var(--accent); border-color: var(--text); color: var(--text); }
+.shell .btn.primary:hover { background: var(--accent); }
+.shell .btn.danger { color: #b3121a; border-color: #b3121a; }
+.shell .btn.plain { border-color: transparent; text-decoration: underline; }
+.shell .in, .shell select.in, .shell textarea.in { border: 2px solid var(--text); border-radius: 16px; }
+.shell textarea.in { border-radius: 20px; }
+.shell .tag { border-radius: 999px; padding: 3px 12px; font-weight: 700; }
+.shell .tag.accent { background: var(--accent); color: var(--text); }
+.shell .tag.good { background: var(--m); color: var(--text); }
+.shell .tag.warn { background: var(--y); color: var(--text); }
+.shell .tag.bad { background: #ffb3b3; color: var(--text); }
+.shell .notice { background: var(--y); color: var(--text); border-radius: 28px; font-weight: 500; }
+.shell .nav button[aria-current="page"] { background: var(--text); color: #fff; border-radius: 999px; }
+.shell .nav button[aria-current="page"] svg { color: var(--accent); }
+.shell .nav button { border-radius: 999px; font-weight: 500; }
+.shell .nav .count { background: var(--accent); color: var(--text); border-radius: 999px; padding: 0 8px; font-weight: 700; }
+.shell .brand { font-size: 28px; font-weight: 800; }
+.shell .card.drop { background: var(--y); }
+.shell .card.drop .btn.primary { background: var(--text); color: #fff; }
+.shell .card.drop .muted { color: var(--text); }
+.shell .day { border-radius: 20px; background: var(--ground); }
+.shell .day.drop { background: var(--accent); color: var(--text); }
+.shell .day.drop b { color: var(--text); }
+.shell .slot { background: var(--m); border-radius: 12px; color: var(--text); }
+.shell .slot.proposed { background: var(--y); outline: 0; }
+.shell .avatar { border-radius: 16px; }
+.shell .tabs { border-bottom: 0; gap: 12px; }
+.shell .tabs button { border: 2px solid var(--text); border-radius: 999px; padding: 6px 18px; margin: 0; color: var(--text); background: #fff; font-weight: 800; }
+.shell .tabs button[aria-selected="true"] { background: var(--text); color: #fff; }
+.shell .item + .item { border-top: 0; }
+.shell .item { background: #fff; border-radius: 24px; padding: 14px 18px; margin-top: 8px; }
+.shell .list { gap: 0; }
+.shell .pcard { border-radius: 36px; }
+.shell .panel { border-radius: 28px; }
+.shell .setting + .setting { border-top: 0; }
+.shell .chips button { border-radius: 999px; border: 2px solid var(--text); }
+.shell .chips button[aria-pressed="true"] { background: var(--accent); color: var(--text); border-color: var(--text); }
+.shell .swatch { border-radius: 16px; }
+.shell .bottom, .bottom { background: #fff; }
+dialog { border-radius: 32px; }
