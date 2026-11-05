@@ -3,10 +3,13 @@
 Kept in its own module and its own tables so the base (auth, swipes, matches, photos,
 moderation) stays untouched. `install(app, ctx)` is called from backend.main.create_app.
 """
+import hashlib
+import hmac
 import io
 import json
 import os
 import re
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo
@@ -70,6 +73,37 @@ class Booking(Base):
     b_again: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     settled: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class Credential(Base):
+    __tablename__ = "credentials"
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    digest: Mapped[str] = mapped_column(String(200))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+_SCRYPT = dict(n=2 ** 14, r=8, p=1, maxmem=64 * 1024 * 1024, dklen=32)
+
+
+def _hash(password: str, salt: bytes) -> str:
+    return hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT).hex()
+
+
+def set_password(conn, user_id: str, password: str):
+    salt = secrets.token_bytes(16)
+    value = f"scrypt${salt.hex()}${_hash(password, salt)}"
+    row = conn.get(Credential, user_id)
+    if row:
+        row.digest, row.updated_at = value, now()
+    else:
+        conn.add(Credential(user_id=user_id, digest=value))
+
+
+def check_password(conn, user_id: str | None, password: str) -> bool:
+    row = conn.get(Credential, user_id) if user_id else None
+    salt, expected = (bytes.fromhex(row.digest.split("$")[1]), row.digest.split("$")[2]) if row else (b"\0" * 16, "0" * 64)
+    got = _hash(password, salt)  # always hash, so a missing account costs the same time
+    return row is not None and hmac.compare_digest(got, expected)
 
 
 class StyleIn(BaseModel):

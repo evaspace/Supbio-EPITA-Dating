@@ -112,3 +112,25 @@ def test_stats_hide_small_groups(pair):
     a, b, m, _ = pair
     res = a.get("/api/stats").json()
     assert res["ranking"] == [] and res["hidden_groups"] >= 2 and res["threshold"] == 10
+
+
+def test_password_login_reset_and_lockout(pair):
+    a, _, _, _ = pair
+    a.post("/api/auth/logout")
+    assert a.get("/api/me").status_code == 401
+    assert a.post("/api/auth/login", json={"email": "a@epita.fr", "password": "wrong"}).status_code == 401
+    assert a.post("/api/auth/login", json={"email": "nobody@epita.fr", "password": "x"}).status_code == 401
+    ok = a.post("/api/auth/login", json={"email": "a@epita.fr", "password": "correct horse battery"})
+    assert ok.status_code == 200 and a.get("/api/me").json()["email"] == "a@epita.fr"
+    a.post("/api/auth/logout")
+    code = a.post("/api/auth/request-code", json={"email": "a@epita.fr", "school": "EPITA"}).json()["local_demo_code"]
+    assert a.post("/api/auth/reset", json={"email": "a@epita.fr", "school": "EPITA", "code": "000000", "password": "brand new password"}).status_code == 400
+    r = a.post("/api/auth/reset", json={"email": "a@epita.fr", "school": "EPITA", "code": code, "password": "brand new password"})
+    assert r.status_code == 200
+    a.post("/api/auth/logout")
+    assert a.post("/api/auth/login", json={"email": "a@epita.fr", "password": "correct horse battery"}).status_code == 401
+    assert a.post("/api/auth/login", json={"email": "a@epita.fr", "password": "brand new password"}).status_code == 200
+    for _ in range(10):
+        last = a.post("/api/auth/login", json={"email": "a@epita.fr", "password": "nope"})
+    assert last.status_code == 429
+    assert a.post("/api/auth/verify-code", json={"email": "new@epita.fr", "code": "000000", "school": "EPITA", "name": "Zed", "birthday": "2000-01-01", "adult_consent": True}).status_code in (400, 429)

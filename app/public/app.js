@@ -19,7 +19,7 @@ const ICONS = {
 };
 const icon = n => `<svg class="i" viewBox="0 0 16 16" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const state = { user: null, style: null, screen: 'home', drop: null, bookings: null, me: null, matches: [], profiles: null, stats: null, interests: null, queue: null, tab: 'upcoming', auth: { step: 'email' }, menu: false };
+const state = { user: null, style: null, screen: 'home', drop: null, bookings: null, me: null, matches: [], profiles: null, stats: null, interests: null, queue: null, tab: 'upcoming', auth: { mode: 'login', step: 'email' }, menu: false };
 let canvasCtx = null;
 
 async function api(path, method = 'GET', body, form) {
@@ -303,22 +303,32 @@ function screenModeration() {
 
 /* auth */
 function screenAuth() {
-  const a = state.auth;
+  const a = state.auth, mode = a.mode || 'login';
   const mark = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#b8336a"/><circle cx="16" cy="13" r="5" fill="#fbf7f8"/><rect x="14.5" y="19" width="3" height="7" fill="#fbf7f8"/></svg>';
-  const form = a.step === 'email'
-    ? `<form class="card fields" data-form="request"><h2>Connexion par email d’école</h2>
-      <label class="f">École<select class="in" name="school">${SCHOOLS.map(s => `<option ${a.school === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
-      <label class="f">Email d’école<input class="in" type="email" name="email" autocomplete="email" required value="${esc(a.email || '')}"></label>
-      <button class="btn primary" type="submit">Recevoir mon code</button></form>`
-    : `<form class="card fields" data-form="verify"><h2>Code reçu par email</h2><p class="muted">Envoyé à ${esc(a.email)}. Il expire dans 10 minutes.</p>
+  const schoolSel = `<label class="f">École<select class="in" name="school">${SCHOOLS.map(s => `<option ${a.school === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>`;
+  const pw = (label, auto) => `<label class="f">${label}<small>10 caractères minimum</small><input class="in" type="password" name="password" minlength="10" maxlength="128" autocomplete="${auto}" required></label>`;
+  const tabs = `<div class="tabs" role="tablist"><button type="button" role="tab" data-auth="login" aria-selected="${mode === 'login'}">Se connecter</button><button type="button" role="tab" data-auth="signup" aria-selected="${mode === 'signup'}">Créer un compte</button></div>`;
+  let form;
+  if (mode === 'login') form = `${tabs}<form class="card fields" data-form="login">
+      <label class="f">Email d’école<input class="in" type="email" name="email" autocomplete="username" required value="${esc(a.email || '')}"></label>
+      <label class="f">Mot de passe<input class="in" type="password" name="password" autocomplete="current-password" required></label>
+      <div class="row"><button class="btn primary" type="submit">Se connecter</button><button class="btn plain" type="button" data-auth="reset">Mot de passe oublié ou première connexion</button></div></form>`;
+  else if (a.step !== 'code') form = `${mode === 'signup' ? tabs : ''}<form class="card fields" data-form="request"><h2>${mode === 'signup' ? 'Vérifie ton email d’école' : 'Réinitialiser le mot de passe'}</h2>
+      ${schoolSel}<label class="f">Email d’école<input class="in" type="email" name="email" autocomplete="email" required value="${esc(a.email || '')}"></label>
+      <div class="row"><button class="btn primary" type="submit">Recevoir mon code</button>${mode === 'reset' ? '<button class="btn plain" type="button" data-auth="login">Retour</button>' : ''}</div></form>`;
+  else if (mode === 'reset') form = `<form class="card fields" data-form="reset"><h2>Nouveau mot de passe</h2><p class="muted">Code envoyé à ${esc(a.email)}, valable 10 minutes.</p>
+      <label class="f">Code à 6 chiffres<input class="in" name="code" inputmode="numeric" pattern="\\d{6}" maxlength="6" autocomplete="one-time-code" required></label>${pw('Nouveau mot de passe', 'new-password')}
+      <div class="row"><button class="btn primary" type="submit">Changer et entrer</button><button class="btn plain" type="button" data-auth="login">Retour</button></div></form>`;
+  else form = `${tabs}<form class="card fields" data-form="verify"><h2>Crée ton compte</h2><p class="muted">Code envoyé à ${esc(a.email)}, valable 10 minutes.</p>
       <label class="f">Code à 6 chiffres<input class="in" name="code" inputmode="numeric" pattern="\\d{6}" maxlength="6" autocomplete="one-time-code" required></label>
       <div class="fields two"><label class="f">Prénom<input class="in" name="name" minlength="2" maxlength="35" required></label><label class="f">Date de naissance<input class="in" type="date" name="birthday" required></label></div>
       <label class="f">Genre<select class="in" name="gender">${GENDERS.map(g => `<option ${g === 'Non précisé' ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
+      ${pw('Mot de passe', 'new-password')}
       <label class="check"><input type="checkbox" name="consent" required>J’ai 18 ans ou plus</label>
-      <div class="row"><button class="btn primary" type="submit">Entrer</button><button class="btn plain" type="button" data-act="auth-back">Changer d’adresse</button></div></form>`;
+      <div class="row"><button class="btn primary" type="submit">Créer mon compte</button><button class="btn plain" type="button" data-auth="signup">Changer d’adresse</button></div></form>`;
   return `<div class="auth"><div><div class="brand">${mark}Jeudi</div><h1>Un café plutôt qu’un chat</h1>
     <p class="lede">Chaque jeudi soir, les créneaux de la semaine s’ouvrent. Tu matches, tu choisis un lieu du campus et une heure, puis tu viens.</p>
-    <ol><li>Ton profil est un dessin et un style, pas un feed</li><li>Le match débouche sur un créneau, pas sur une conversation</li><li>Les photos restent privées jusqu’au match</li></ol></div>${form}</div>`;
+    <ol><li>Ton profil est un dessin et un style, pas un feed</li><li>Le match débouche sur un créneau, pas sur une conversation</li><li>Les photos restent privées jusqu’au match</li></ol></div><div class="stack">${form}</div></div>`;
 }
 
 function render() {
@@ -418,9 +428,9 @@ const acts = {
   async 'photo-del'(b) { if (confirm('Supprimer cette photo ?')) { await api(`/api/me/photos/${b.dataset.id}`, 'DELETE'); state.user = await api('/api/me'); render(); } },
   async 'photo-move'(b) { const ids = state.user.photos.map(p => p.id), i = ids.indexOf(b.dataset.id), j = i + Number(b.dataset.d); if (j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; await api('/api/me/photos/order', 'PATCH', { photo_ids: ids }); state.user = await api('/api/me'); render(); },
   async export() { const data = await api('/api/account/export'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); a.download = 'jeudi-mes-donnees.json'; a.click(); },
-  async logout() { await api('/api/auth/logout', 'POST'); state.user = null; state.auth = { step: 'email' }; render(); },
+  async logout() { await api('/api/auth/logout', 'POST'); state.user = null; state.auth = { mode: 'login', step: 'email' }; render(); },
   async delete() { if (confirm('Supprimer définitivement ton compte et toutes tes données ?')) { await api('/api/account', 'DELETE'); state.user = null; render(); } },
-  'auth-back'() { state.auth = { step: 'email' }; render(); },
+  'auth-back'() { state.auth = { mode: 'login', step: 'email' }; render(); },
   async approve(b) { await modAct(() => api(`/api/admin/accounts/${b.dataset.id}`, 'PATCH', { approved: true })); },
   async 'photo-ok'(b) { await modAct(() => api(`/api/admin/photos/${b.dataset.id}`, 'PATCH', { status: 'approved' })); },
   async 'photo-no'(b) { await modAct(() => api(`/api/admin/photos/${b.dataset.id}`, 'PATCH', { status: 'rejected' })); },
@@ -441,13 +451,20 @@ async function swipe(id, action) {
 
 /* forms */
 const forms = {
+  async login(f) {
+    const email = f.email.value.trim().toLowerCase();
+    try { const r = await api('/api/auth/login', 'POST', { email, password: f.password.value }); state.user = r.user; state.style = await api('/api/me/style'); await go(state.style.configured ? 'home' : 'profile'); } catch (e) { state.auth.email = email; toast(e.message); }
+  },
+  async reset(f) {
+    try { const r = await api('/api/auth/reset', 'POST', { email: state.auth.email, school: state.auth.school, code: f.code.value, password: f.password.value }); state.user = r.user; state.style = await api('/api/me/style'); toast('Mot de passe changé'); await go(state.style.configured ? 'home' : 'profile'); } catch (e) { toast(e.message); }
+  },
   async request(f) {
     const school = f.school.value, email = f.email.value.trim().toLowerCase();
-    try { const r = await api('/api/auth/request-code', 'POST', { email, school }); state.auth = { step: 'code', email, school }; if (r.local_demo_code) toast('Code local : ' + r.local_demo_code); render(); } catch (e) { toast(e.message); }
+    try { const r = await api('/api/auth/request-code', 'POST', { email, school }); state.auth = { mode: state.auth.mode, step: 'code', email, school }; if (r.local_demo_code) toast('Code local : ' + r.local_demo_code); render(); } catch (e) { toast(e.message); }
   },
   async verify(f) {
     try {
-      const r = await api('/api/auth/verify-code', 'POST', { email: state.auth.email, school: state.auth.school, code: f.code.value, name: f.name.value, birthday: f.birthday.value, gender: f.gender.value, city: 'Lyon', adult_consent: f.consent.checked });
+      const r = await api('/api/auth/verify-code', 'POST', { email: state.auth.email, school: state.auth.school, code: f.code.value, name: f.name.value, birthday: f.birthday.value, gender: f.gender.value, city: 'Lyon', adult_consent: f.consent.checked, password: f.password.value });
       state.user = r.user; state.style = await api('/api/me/style'); await go(state.style.configured ? 'home' : 'profile');
       if (!state.style.configured) toast('Dernière étape : ton intention et ton style');
     } catch (e) { toast(e.message); }
@@ -473,6 +490,7 @@ document.addEventListener('submit', e => { const f = e.target.closest('[data-for
 document.addEventListener('input', e => { if (e.target.closest('[data-form="style"]') && e.target.type === 'color') updateContrast(); });
 document.addEventListener('click', e => {
   const nav = e.target.closest('[data-nav]'); if (nav) { document.querySelectorAll('dialog').forEach(d => d.close()); go(nav.dataset.nav); return; }
+  const au = e.target.closest('[data-auth]'); if (au) { state.auth = { mode: au.dataset.auth, step: 'email', email: state.auth.email, school: state.auth.school }; render(); return; }
   const tab = e.target.closest('[data-tab]'); if (tab) { state.tab = tab.dataset.tab; render(); return; }
   const a = e.target.closest('[data-act]'); if (a && acts[a.dataset.act]) { Promise.resolve(acts[a.dataset.act](a)).catch(err => toast(err.message)); }
 });

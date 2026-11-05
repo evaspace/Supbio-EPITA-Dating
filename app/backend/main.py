@@ -169,6 +169,27 @@ class VerifyCode(BaseModel):
     city: str = Field(default="Lyon", max_length=30)
     gender: str = Field(default="Non précisé", max_length=30)
     adult_consent: bool
+    password: str | None = Field(default=None, min_length=10, max_length=128)
+
+class LoginIn(BaseModel):
+    email: str = Field(min_length=6, max_length=255)
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def email_format(cls, v: str) -> str:
+        return v.strip().lower()
+
+class ResetIn(BaseModel):
+    email: str = Field(min_length=6, max_length=255)
+    school: School
+    code: str = Field(pattern=r"^\d{6}$")
+    password: str = Field(min_length=10, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def email_format(cls, v: str) -> str:
+        return v.strip().lower()
 
 class EditProfile(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=35)
@@ -277,7 +298,10 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         ip = request.headers.get("x-real-ip", "") if os.getenv("TRUST_PROXY_IP") == "true" else ""
         if not ip:
             ip = request.client.host if request.client else "unknown"
-        bucket_key = password_digest(secret, f"{category}:{ip}")
+        limit_key(conn, f"{category}:{ip}", max_count, window_seconds)
+
+    def limit_key(conn: Session, key: str, max_count: int, window_seconds: int):
+        bucket_key = password_digest(secret, key)
         row = conn.get(RateBucket, bucket_key, with_for_update=True)
         t = now()
         if row is None:
@@ -398,6 +422,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         if len(clean_name) < 2:
             raise HTTPException(422, "Prénom invalide")
         user = conn.scalar(select(User).where(User.email == email))
+        new_user = user is None
         if not user:
             user = User(email=email, name=clean_name, age=years_old(payload.birthday), school=payload.school,
                         approved=(not approval_required or email in admin_emails),
@@ -407,13 +432,57 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
             conn.flush()
         if user.suspended:
             raise HTTPException(403, "Compte suspendu")
+        if payload.password is not None:
+            jeudi_layer.set_password(conn, user.id, payload.password)
+        elif new_user:
+            raise HTTPException(422, "Choisis un mot de passe d'au moins 10 caractères")
         conn.delete(challenge)
+        start_session(response, conn, user)
+        return {"user": with_photos(conn, represent(user, True), private=True), "notice": "Age declare uniquement : validation adulte manuelle requise avant acces si activee"}
+
+    def start_session(response: Response, conn: Session, user: User):
         token = secrets.token_urlsafe(48)
         conn.add(SessionToken(digest=password_digest(secret, token), user_id=user.id, expires_at=now()+timedelta(days=7)))
         conn.commit()
         response.set_cookie("campus_session", token, max_age=7*86400, httponly=True,
                             secure=cookie_secure, samesite="strict", path="/")
-        return {"user": with_photos(conn, represent(user, True), private=True), "notice": "Age declare uniquement : validation adulte manuelle requise avant acces si activee"}
+
+    @app.post("/api/auth/login")
+    def login(payload: LoginIn, response: Response, request: Request, conn: Db):
+        limit_ip(conn, request, "login", 30, 15 * 60)
+        limit_key(conn, "login-email:" + payload.email, 8, 15 * 60)
+        user = conn.scalar(select(User).where(User.email == payload.email))
+        ok = jeudi_layer.check_password(conn, user.id if user else None, payload.password)
+        if not user or not ok:
+            raise HTTPException(401, "Email ou mot de passe incorrect. Première connexion ou oubli : utilise « Mot de passe oublié ».")
+        if user.suspended:
+            raise HTTPException(403, "Compte suspendu")
+        start_session(response, conn, user)
+        return {"user": with_photos(conn, represent(user, True), private=True)}
+
+    @app.post("/api/auth/reset")
+    def reset_password(payload: ResetIn, response: Response, request: Request, conn: Db):
+        limit_ip(conn, request, "reset-pw", 20, 15 * 60)
+        if not re.fullmatch(r"[^@\s]+@" + re.escape(SCHOOLS[payload.school]), payload.email):
+            raise HTTPException(422, "Email et école incompatibles")
+        challenge = conn.get(OTP, payload.email)
+        if not challenge or challenge.expires_at < now() or challenge.tries >= 5:
+            raise HTTPException(400, "Code invalide ou expiré")
+        challenge.tries += 1
+        if not hmac.compare_digest(challenge.code_hash, password_digest(secret, payload.email + ":" + payload.code)):
+            conn.commit()
+            raise HTTPException(400, "Code invalide ou expiré")
+        user = conn.scalar(select(User).where(User.email == payload.email))
+        if not user:
+            raise HTTPException(400, "Code invalide ou expiré")
+        if user.suspended:
+            raise HTTPException(403, "Compte suspendu")
+        jeudi_layer.set_password(conn, user.id, payload.password)
+        conn.delete(challenge)
+        for old in conn.scalars(select(SessionToken).where(SessionToken.user_id == user.id)):
+            conn.delete(old)
+        start_session(response, conn, user)
+        return {"user": with_photos(conn, represent(user, True), private=True)}
 
     @app.post("/api/auth/logout")
     def logout(request: Request, response: Response, conn: Db):

@@ -19,7 +19,7 @@ def enroll(client, email, school, name, birthday="2000-05-05", gender="Non préc
     code = otp.json()["local_demo_code"]
     r = client.post('/api/auth/verify-code', json={
         "email": email, "code": code, "school": school, "name": name,
-        "birthday": birthday, "city": "Paris", "gender": gender, "adult_consent": True
+        "birthday": birthday, "city": "Paris", "gender": gender, "adult_consent": True, "password": "correct horse battery"
     })
     assert r.status_code == 200, r.text
     return r.json()["user"]
@@ -32,7 +32,7 @@ def test_auth_domains_otp_18_plus_and_private_session(clients):
     assert x.status_code == 200
     assert alice.post('/api/auth/request-code', json={"email":"person@epita.fr","school":"EPITA"}).status_code == 429
     code = x.json()['local_demo_code']
-    base = {"email":"person@epita.fr","school":"EPITA","name":"Robin", "city":"Paris", "gender":"Homme","adult_consent":True}
+    base = {"email":"person@epita.fr","school":"EPITA","name":"Robin", "city":"Paris", "gender":"Homme","adult_consent":True,"password":"correct horse battery"}
     assert alice.post('/api/auth/verify-code',json={**base,"code":code,"birthday":"2012-06-01"}).status_code == 403
     assert alice.post('/api/auth/verify-code',json={**base,"code":"999999","birthday":"2000-06-01"}).status_code == 400
     assert alice.post('/api/auth/verify-code',json={**base,"code":code,"birthday":"2000-06-01"}).status_code == 200
