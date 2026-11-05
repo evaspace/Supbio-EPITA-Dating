@@ -106,6 +106,10 @@ def test_photo_private_until_moderated_and_static_files_protected(clients):
         photo=session.get(Photo,photo_id)
         photo.status='approved'
         session.commit()
+    # Jeudi rule: even approved photos stay private until the two people have matched.
+    assert bob.get(f'/api/photos/{photo_id}').status_code==404
+    alice.post('/api/swipes',json={'target_id':b['id'],'action':'like'})
+    assert bob.post('/api/swipes',json={'target_id':a['id'],'action':'like'}).json()['matched'] is True
     assert bob.get(f'/api/photos/{photo_id}').status_code==200
     assert alice.patch('/api/me',json={'visible':False}).status_code==200
     assert bob.get(f'/api/photos/{photo_id}').status_code==404

@@ -4,36 +4,36 @@ Décisions validées : PWA (site installable), FastAPI, email d'école obligatoi
 stats et compétition inter-campus, rencontres avec créneau, critères avec delta.
 
 ## Concept
-- [ ] Rencontre réelle avec créneau (café, baby-foot, run) plutôt que chat libre
-- [ ] Drop hebdomadaire le jeudi soir, places limitées
-- [ ] Profil public = petit dessin fait par la personne (ou mème) ; photo privée
+- [x] Rencontre réelle avec créneau (café, baby-foot, run) plutôt que chat libre
+- [x] Drop hebdomadaire le jeudi soir, places limitées
+- [x] Profil public = petit dessin fait par la personne (ou mème) ; photo privée
 - [ ] Accord mutuel secret sur les photos, seulement entre paires qui passent les critères
-- [ ] Critères déclarés avec delta (âge, taille, genre/orientation, campus)
-- [ ] Brise-glace = l'activité proposée, pas de « salut ça va »
+- [x] Critères déclarés avec delta (âge, taille, genre/orientation, campus)
+- [x] Brise-glace = l'activité proposée, pas de « salut ça va »
 
 ## Fiabilité (lapins)
-- [ ] Check-in 1 h avant, sinon annulation propre
-- [ ] Validation sur place (scan croisé ou code du lieu)
-- [ ] Score de fiabilité, 2 lapins = 1 semaine de suspension
-- [ ] Lieux imposés par l'app, option duo avec un ami
-- [ ] Retour privé après rencontre (« à revoir ? ») pour affiner le matching
+- [x] Check-in 1 h avant, sinon annulation propre
+- [x] Validation sur place (scan croisé ou code du lieu)
+- [x] Score de fiabilité, 2 lapins = 1 semaine de suspension
+- [x] Lieux imposés par l'app, option duo avec un ami
+- [x] Retour privé après rencontre (« à revoir ? ») pour affiner le matching
 
 ## Stats et compétition
-- [ ] Elo interne uniquement, jamais de score individuel affiché
-- [ ] Classement inter-campus / promo / filière sur les rencontres VALIDÉES
-- [ ] Seuil d'anonymat : groupe affiché à partir de 10 personnes
+- [x] Elo interne uniquement, jamais de score individuel affiché
+- [x] Classement inter-campus / promo / filière sur les rencontres VALIDÉES
+- [x] Seuil d'anonymat : groupe affiché à partir de 10 personnes
 - [ ] Récap hebdo / de semestre façon « wrapped » du campus
 
 ## Technique
-- [ ] Choisir le dossier du projet et le port sur le serveur (pas d'infra Hetzner)
+- [x] Choisir le dossier du projet et le port sur le serveur (pas d'infra Hetzner)
 - [ ] Backend FastAPI + SQLite pour démarrer, front PWA
-- [ ] Inscription par email d'école (domaines autorisés en liste)
-- [ ] Envoi d'email : copier MAIL_* depuis /opt/pierref/share_per_projet/.env
+- [x] Inscription par email d'école (domaines autorisés en liste)
+- [x] Envoi d'email : copier MAIL_* depuis /opt/pierref/share_per_projet/.env
       (OVH, expéditeur morgan@pierref.eu) vers le .env du projet, sans afficher le mot de passe
-- [ ] Éditeur de dessin canvas (pixel art 32x32 ou 64x64) + upload de mème avec modération
+- [x] Éditeur de dessin canvas (pixel art 32x32 ou 64x64) + upload de mème avec modération
 - [ ] Notifications push (Android direct, iOS seulement après ajout à l'écran d'accueil)
 - [ ] Taxonomie d'intérêts : normaliser allthecategorie.md avant usage
-- [ ] Signalement, blocage, bouton de sécurité, partage du créneau à un ami
+- [x] Signalement, blocage, bouton de sécurité, partage du créneau à un ami
 - [ ] RGPD : suppression de compte, minimisation des données, mentions légales
 
 ## Autres idées

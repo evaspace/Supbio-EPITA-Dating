@@ -16,6 +16,7 @@ import smtplib
 from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Annotated, Literal
 from uuid import uuid4
 
@@ -28,7 +29,8 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, Uni
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHOOLS = {"EPITA": "epita.fr", "SupBiotech": "supbiotech.fr"}
+SCHOOLS = {"EPITA": "epita.fr", "SupBiotech": "supbiotech.fr", "ESME": "esme.fr", "ISG": "isg.fr", "IPSA": "ipsa.fr"}
+School = Literal["EPITA", "SupBiotech", "ESME", "ISG", "IPSA"]
 GENDERS = {"Femme", "Homme", "Non-binaire", "Autre", "Non précisé"}
 CITIES = {"Paris", "Lyon", "Rennes", "Strasbourg", "Toulouse", "Autre"}
 UTC = timezone.utc
@@ -55,12 +57,12 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(35))
     school: Mapped[str] = mapped_column(String(30), index=True)
-    city: Mapped[str] = mapped_column(String(30), default="Paris")
+    city: Mapped[str] = mapped_column(String(30), default="Lyon")
     age: Mapped[int] = mapped_column(Integer)
     gender: Mapped[str] = mapped_column(String(30), default="Non précisé")
     bio: Mapped[str] = mapped_column(Text, default="")
     interests: Mapped[str] = mapped_column(Text, default="[]")
-    preferences: Mapped[str] = mapped_column(Text, default='{"schools":["EPITA","SupBiotech"],"genders":["Femme","Homme","Non-binaire","Autre","Non précisé"],"age_min":18,"age_max":40,"city":"Toutes"}')
+    preferences: Mapped[str] = mapped_column(Text, default='{"schools":["EPITA","SupBiotech","ESME","ISG","IPSA"],"genders":["Femme","Homme","Non-binaire","Autre","Non précisé"],"age_min":18,"age_max":40,"city":"Toutes"}')
     visible: Mapped[bool] = mapped_column(Boolean, default=True)
     suspended: Mapped[bool] = mapped_column(Boolean, default=False)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -151,7 +153,7 @@ class AccountAction(BaseModel):
 
 class RequestCode(BaseModel):
     email: str = Field(min_length=6, max_length=255)
-    school: Literal["EPITA", "SupBiotech"]
+    school: School
 
     @field_validator("email")
     @classmethod
@@ -161,10 +163,10 @@ class RequestCode(BaseModel):
 class VerifyCode(BaseModel):
     email: str
     code: str = Field(pattern=r"^\d{6}$")
-    school: Literal["EPITA", "SupBiotech"]
+    school: School
     name: str = Field(min_length=2, max_length=35)
     birthday: date
-    city: str = Field(default="Paris", max_length=30)
+    city: str = Field(default="Lyon", max_length=30)
     gender: str = Field(default="Non précisé", max_length=30)
     adult_consent: bool
 
@@ -177,7 +179,7 @@ class EditProfile(BaseModel):
     visible: bool | None = None
 
 class Preferences(BaseModel):
-    schools: list[Literal["EPITA", "SupBiotech"]] = Field(min_length=1)
+    schools: list[School] = Field(min_length=1)
     genders: list[str] = Field(min_length=1)
     age_min: int = Field(ge=18, le=99)
     age_max: int = Field(ge=18, le=99)
@@ -210,6 +212,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
     # Initial schema for a fresh database; use a reviewed migration before upgrades.
+    from . import jeudi as jeudi_layer  # registers the Jeudi tables on Base
     Base.metadata.create_all(engine)
     LocalSession = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
     live_sockets: dict[str, set[WebSocket]] = {}
@@ -267,6 +270,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
 
     AuthUser = Annotated[User, Depends(own_user)]
     Db = Annotated[Session, Depends(db)]
+    ctx = SimpleNamespace(AuthUser=AuthUser, Db=Db, LocalSession=LocalSession, media_dir=media_dir, production=production, root=ROOT)
 
     def limit_ip(conn: Session, request: Request, category: str, max_count: int, window_seconds: int):
         # The reverse proxy must overwrite X-Real-IP and the API must not be directly reachable.
@@ -323,6 +327,8 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         data["photos"] = [{"id": p.id, "url": f"/api/photos/{p.id}", "status": p.status}
                           for p in photos if private or p.status == "approved"]
         return data
+
+    ctx.represent, ctx.with_photos = represent, with_photos
 
     def is_blocked(conn: Session, a: str, b: str) -> bool:
         return conn.scalar(select(Block.id).where(or_((Block.actor_id == a) & (Block.target_id == b),
@@ -491,10 +497,15 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
                 continue
             if reciprocal["city"] not in {"Toutes", user.city}:
                 continue
+            if not (jeudi_layer.intents_of(conn, user.id) & jeudi_layer.intents_of(conn, target.id)):
+                continue
             other_interests = set(json.loads(target.interests))
             common = sorted(my_interests & other_interests)
-            eligible.append({**with_photos(conn, represent(target)), "shared_interests": common})
-        eligible.sort(key=lambda p: (-len(p["shared_interests"]), p["id"]))
+            eligible.append({**ctx.decorate(conn, with_photos(conn, represent(target)), False), "shared_interests": common,
+                             "_gap": abs(jeudi_layer.elo_of(conn, user.id) - jeudi_layer.elo_of(conn, target.id))})
+        eligible.sort(key=lambda p: (-len(p["shared_interests"]), p.pop("_gap"), p["id"]))
+        for p in eligible:
+            p.pop("_gap", None)
         return {"profiles": eligible[:30]}
 
     @app.post("/api/swipes")
@@ -517,6 +528,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         if exists:
             raise HTTPException(409, "Profil déjà évalué")
         conn.add(Swipe(actor_id=user.id, target_id=target.id, action=payload.action))
+        jeudi_layer.on_swipe(conn, user, target, payload.action)
         match_id = None
         if payload.action == "like":
             reverse = conn.scalar(select(Swipe).where(Swipe.actor_id == target.id, Swipe.target_id == user.id, Swipe.action == "like"))
@@ -535,7 +547,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
     def likes_received(user: AuthUser, conn: Db):
         likes = conn.scalars(select(Swipe).where(Swipe.target_id == user.id, Swipe.action == "like")).all()
         sent = set(conn.scalars(select(Swipe.target_id).where(Swipe.actor_id == user.id)))
-        return {"profiles": [with_photos(conn, represent(u)) for l in likes if l.actor_id not in sent and not is_blocked(conn, user.id, l.actor_id)
+        return {"profiles": [ctx.decorate(conn, with_photos(conn, represent(u)), False) for l in likes if l.actor_id not in sent and not is_blocked(conn, user.id, l.actor_id)
                              if (u := conn.get(User, l.actor_id)) and u.visible and not u.suspended]}
 
     @app.get("/api/matches")
@@ -549,7 +561,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
             if not target or target.suspended or (approval_required and not target.approved):
                 continue
             last = conn.scalar(select(Message).where(Message.match_id == match.id).order_by(Message.created_at.desc(), Message.id.desc()).limit(1))
-            res.append({"id": match.id, "profile": with_photos(conn, represent(target)),
+            res.append({"id": match.id, "profile": ctx.decorate(conn, with_photos(conn, represent(target)), True),
                         "last_message": last.body if last else None, "created_at": match.created_at.isoformat()})
         return {"matches": res}
 
@@ -698,6 +710,10 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
             raise HTTPException(404, "Photo indisponible")
         if item.owner_id != user.id and (item.status != "approved" or not owner.visible or owner.suspended):
             raise HTTPException(404, "Photo en attente de validation")
+        if item.owner_id != user.id:
+            x, y = sorted((user.id, owner.id))
+            if not conn.scalar(select(Match.id).where(Match.user_a_id == x, Match.user_b_id == y)):
+                raise HTTPException(404, "Photo visible seulement après un match")
         filename = media_dir / item.file_name  # generated UUID filename, not user input
         if not filename.exists():
             raise HTTPException(404, "Photo introuvable")
@@ -726,6 +742,9 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
     def delete_account(user: AuthUser, response: Response, conn: Db):
         # SQL FKs cascade most rows, but rows pointing to account as target must also cascade.
         pictures = [media_dir / x.file_name for x in conn.scalars(select(Photo).where(Photo.owner_id == user.id))]
+        own_style = conn.get(jeudi_layer.UserStyle, user.id)
+        if own_style and own_style.drawing_file:
+            pictures.append(media_dir / own_style.drawing_file)
         conn.delete(user)
         conn.commit()
         for file in pictures:
@@ -739,6 +758,7 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         return user
 
     Admin = Annotated[User, Depends(admin_only)]
+    ctx.Admin = Admin
 
     @app.get("/api/admin/queue")
     def admin_queue(admin: Admin, conn: Db):
@@ -791,6 +811,9 @@ def create_app(database_url: str | None = None, dev_otp: bool | None = None) -> 
         row.approved = payload.approved
         conn.commit()
         return {"ok": True}
+
+    ctx.is_blocked = is_blocked
+    jeudi_layer.install(app, ctx)
 
     # Mount the existing polished PWA after API routes to keep all endpoints accessible.
     app.mount("/", StaticFiles(directory=str(ROOT / "public"), html=True), name="frontend")
