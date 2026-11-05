@@ -1,0 +1,19 @@
+CAMPUS CONNECT - DEPLOIEMENT WEB (application connectee + PostgreSQL)
+
+1) Extraire le ZIP sur un VPS Linux avec Docker Compose et un nom de domaine.
+2) Faire pointer le DNS du domaine sur le VPS. Ouvrir les ports 80 et 443.
+3) Copier .env.example vers .env et renseigner : DOMAIN, AUTH_SECRET,
+   POSTGRES_PASSWORD, ADMIN_EMAILS et les parametres SMTP.
+   Ne jamais publier .env dans le depot GitHub.
+4) Dans le dossier racine du projet :
+   docker compose config --quiet
+   docker compose up -d --build
+5) Aller sur https://TON-DOMAINE
+
+Tous les utilisateurs doivent prouver la possession de leur adresse etudiante
+par code email. Les autres comptes restent EN ATTENTE jusqu'a approbation.
+L'administrateur examine l'age et les photos avant d'approuver.
+
+ATTENTION : ce projet est une base deployable pour beta privee, pas encore une
+application legalement et techniquement auditee pour ouverture publique.
+Voir README.md et SECURITY.md avant toute utilisation avec vraies donnees.

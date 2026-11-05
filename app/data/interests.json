@@ -1,0 +1,506 @@
+{
+  "families": [
+    {
+      "name": "Sports et condition physique",
+      "tags": [
+        "Football",
+        "Basketball",
+        "Volleyball",
+        "Tennis",
+        "Padel",
+        "Badminton",
+        "Course à pied",
+        "Randonnée",
+        "Natation",
+        "Cyclisme",
+        "Fitness",
+        "Escalade",
+        "Yoga",
+        "Ski",
+        "Arts martiaux"
+      ]
+    },
+    {
+      "name": "Musique et univers sonores",
+      "tags": [
+        "Rap français",
+        "Rap US",
+        "Pop",
+        "Rock",
+        "Indie",
+        "Jazz",
+        "Classique",
+        "R&B",
+        "K-pop",
+        "Techno",
+        "House",
+        "Afrobeat",
+        "Guitare",
+        "Piano",
+        "Concerts",
+        "Festivals"
+      ]
+    },
+    {
+      "name": "Cinéma, séries, animation et vidéo",
+      "tags": [
+        "Science-fiction",
+        "Comédies",
+        "Thrillers",
+        "Documentaires",
+        "Cinéma d’auteur",
+        "Films d’animation",
+        "Séries",
+        "Anime",
+        "Studio Ghibli",
+        "Marvel",
+        "Cinéma japonais"
+      ]
+    },
+    {
+      "name": "Jeux vidéo, jeux numériques et communautés",
+      "tags": [
+        "PC Gaming",
+        "Nintendo",
+        "PlayStation",
+        "Jeux coop",
+        "FPS",
+        "RPG",
+        "Jeux de stratégie",
+        "Minecraft",
+        "Jeux indépendants",
+        "Esport",
+        "Speedrun",
+        "Jeux rétro"
+      ]
+    },
+    {
+      "name": "Lecture, écriture et littérature",
+      "tags": [
+        "Fantasy",
+        "Science-fiction",
+        "Romans policiers",
+        "Mangas",
+        "BD",
+        "Romans",
+        "Poésie",
+        "Philosophie",
+        "Essais",
+        "Écriture créative"
+      ]
+    },
+    {
+      "name": "Arts, création et artisanat",
+      "tags": [
+        "Dessin",
+        "Peinture",
+        "Photographie",
+        "Illustration",
+        "Design graphique",
+        "Théâtre",
+        "Danse",
+        "Céramique",
+        "DIY",
+        "Architecture intérieure"
+      ]
+    },
+    {
+      "name": "Cuisine, gastronomie et boissons",
+      "tags": [
+        "Cuisine italienne",
+        "Cuisine japonaise",
+        "Brunch",
+        "Pâtisserie",
+        "Cuisine maison",
+        "Cuisine végétarienne",
+        "Street food",
+        "Sushi",
+        "Café de spécialité",
+        "Boulangerie"
+      ]
+    },
+    {
+      "name": "Voyages, tourisme et exploration",
+      "tags": [
+        "Road trips",
+        "Voyages en train",
+        "City trips",
+        "Randonnée en voyage",
+        "Camping",
+        "Musées",
+        "Voyages nature",
+        "Découvrir de nouveaux pays"
+      ]
+    },
+    {
+      "name": "Sorties, vie sociale et divertissement",
+      "tags": [
+        "Cinéma",
+        "Bowling",
+        "Escape game",
+        "Concerts",
+        "Musées",
+        "Karaoké",
+        "Jeux entre amis",
+        "Pique-niques",
+        "Expositions"
+      ]
+    },
+    {
+      "name": "Activités à la maison et loisirs tranquilles",
+      "tags": [
+        "Lecture",
+        "Cuisine",
+        "Films à la maison",
+        "Cocooning",
+        "Puzzles",
+        "Plantes d’intérieur",
+        "Podcasts",
+        "Jeux de société"
+      ]
+    },
+    {
+      "name": "Technologie, informatique et sciences",
+      "tags": [
+        "Programmation",
+        "Cybersécurité",
+        "Intelligence artificielle",
+        "Open source",
+        "Robotique",
+        "Électronique",
+        "Data science",
+        "Mathématiques",
+        "Astronomie",
+        "Linux",
+        "Impression 3D"
+      ]
+    },
+    {
+      "name": "Entrepreneuriat, économie et vie professionnelle",
+      "tags": [
+        "Startups",
+        "Création de projet",
+        "Product design",
+        "Innovation",
+        "Économie",
+        "Management de projet",
+        "Freelance",
+        "Associations étudiantes"
+      ]
+    },
+    {
+      "name": "Automobiles, motos et mécanique",
+      "tags": [
+        "Automobile",
+        "Sports automobiles",
+        "Karting",
+        "Mécanique",
+        "Voitures anciennes",
+        "Design automobile",
+        "Sim racing"
+      ]
+    },
+    {
+      "name": "Nature, plein air et écologie",
+      "tags": [
+        "Randonnée",
+        "Forêt",
+        "Montagne",
+        "Mer",
+        "Photographie nature",
+        "Biodiversité",
+        "Jardinage",
+        "Écologie",
+        "Plages"
+      ]
+    },
+    {
+      "name": "Animaux et monde animal",
+      "tags": [
+        "Chats",
+        "Chiens",
+        "Chevaux",
+        "Faune sauvage",
+        "Protection animale",
+        "Aquariophilie",
+        "Observation des oiseaux"
+      ]
+    },
+    {
+      "name": "Histoire, patrimoine et culture générale",
+      "tags": [
+        "Histoire",
+        "Archéologie",
+        "Géographie",
+        "Musées",
+        "Patrimoine",
+        "Culture générale",
+        "Civilisations anciennes"
+      ]
+    },
+    {
+      "name": "Mode, beauté, soins et esthétique personnelle",
+      "tags": [
+        "Mode",
+        "Vintage",
+        "Friperies",
+        "Streetwear",
+        "Design textile",
+        "Cosmétiques",
+        "Parfums",
+        "Soin personnel"
+      ]
+    },
+    {
+      "name": "Bien-être, santé quotidienne et développement personnel",
+      "tags": [
+        "Méditation",
+        "Sommeil",
+        "Relaxation",
+        "Journaling",
+        "Bien-être",
+        "Pleine conscience",
+        "Gestion du stress"
+      ]
+    },
+    {
+      "name": "Philosophie, idées, société et débats",
+      "tags": [
+        "Philosophie",
+        "Sociologie",
+        "Éthique",
+        "Débats",
+        "Psychologie",
+        "Sciences humaines",
+        "Pensée critique"
+      ]
+    },
+    {
+      "name": "Valeurs, causes et engagement citoyen",
+      "tags": [
+        "Bénévolat",
+        "Solidarité",
+        "Environnement",
+        "Droits humains",
+        "Engagement associatif",
+        "Entraide"
+      ]
+    },
+    {
+      "name": "Vie quotidienne, rythme et habitudes",
+      "tags": [
+        "Matin tranquille",
+        "Coucher de soleil",
+        "Balades",
+        "Organiser son agenda",
+        "Spontanéité",
+        "Vie en colocation"
+      ]
+    },
+    {
+      "name": "Langues, voyages culturels et échanges",
+      "tags": [
+        "Anglais",
+        "Espagnol",
+        "Japonais",
+        "Coréen",
+        "Allemand",
+        "Échanges linguistiques",
+        "Cultures étrangères"
+      ]
+    },
+    {
+      "name": "Jeux de société, logique et stratégie",
+      "tags": [
+        "Échecs",
+        "Jeux de cartes",
+        "Jeux de plateau",
+        "Casse-têtes",
+        "Jeux de logique",
+        "Jeux coopératifs",
+        "Jeux d’enquête"
+      ]
+    },
+    {
+      "name": "Activités insolites, aventure et sensations",
+      "tags": [
+        "Accrobranche",
+        "Parcs d’attractions",
+        "Voyages insolites",
+        "Escape game",
+        "Découverte",
+        "Exploration urbaine encadrée"
+      ]
+    },
+    {
+      "name": "Relations, rendez-vous et activités à deux",
+      "tags": [
+        "Balades",
+        "Café",
+        "Musée en duo",
+        "Cuisiner ensemble",
+        "Concert",
+        "Pique-nique",
+        "Cinéma"
+      ]
+    },
+    {
+      "name": "Spiritualité, croyances et traditions",
+      "tags": [
+        "Culture des traditions",
+        "Histoire des religions",
+        "Méditation",
+        "Fêtes traditionnelles"
+      ]
+    },
+    {
+      "name": "Culture alternative et scènes spécialisées",
+      "tags": [
+        "Culture indie",
+        "Musique alternative",
+        "Mode alternative",
+        "Cinéma underground",
+        "Culture geek"
+      ]
+    },
+    {
+      "name": "Collections et passions de collectionneur",
+      "tags": [
+        "Vinyles",
+        "Cartes à collectionner",
+        "Figurines",
+        "Livres rares",
+        "Objets vintage",
+        "Sneakers"
+      ]
+    },
+    {
+      "name": "Architecture, design et espaces",
+      "tags": [
+        "Architecture",
+        "Urbanisme",
+        "Design produit",
+        "Design intérieur",
+        "Graphisme",
+        "Espaces publics"
+      ]
+    },
+    {
+      "name": "Éducation, apprentissage et transmission",
+      "tags": [
+        "Apprendre une langue",
+        "Tutorat",
+        "Veille scientifique",
+        "Pédagogie",
+        "Partage de connaissances",
+        "Cours en ligne"
+      ]
+    },
+    {
+      "name": "Engagement local, communauté et bénévolat",
+      "tags": [
+        "Associations",
+        "Vie de campus",
+        "Bénévolat",
+        "Projets collectifs",
+        "Événements étudiants"
+      ]
+    },
+    {
+      "name": "Festivals, conventions et événements spécialisés",
+      "tags": [
+        "Festival de musique",
+        "Conventions geek",
+        "Salons technologiques",
+        "Festival du film",
+        "Expositions"
+      ]
+    },
+    {
+      "name": "Médias, podcasts et création de contenu",
+      "tags": [
+        "Podcasts",
+        "Vidéos",
+        "Montage vidéo",
+        "Écriture web",
+        "Création de contenu",
+        "Blog",
+        "Streaming"
+      ]
+    },
+    {
+      "name": "Événements sportifs et culture des supporters",
+      "tags": [
+        "Basketball",
+        "Football",
+        "Tennis",
+        "Tournois universitaires",
+        "Supporter son équipe",
+        "Olympiades"
+      ]
+    },
+    {
+      "name": "Jardinage, plantes et vie végétale",
+      "tags": [
+        "Jardinage",
+        "Plantes vertes",
+        "Botanique",
+        "Potager",
+        "Fleurs",
+        "Terrariums"
+      ]
+    },
+    {
+      "name": "Aviation, espace et transports",
+      "tags": [
+        "Aviation",
+        "Astronomie",
+        "Espace",
+        "Trains",
+        "Mobilité douce",
+        "Technologies spatiales"
+      ]
+    },
+    {
+      "name": "Événements sociaux et traditions",
+      "tags": [
+        "Soirées à thème",
+        "Fêtes de campus",
+        "Célébrations",
+        "Traditions locales",
+        "Rencontres associatives"
+      ]
+    },
+    {
+      "name": "Activités manuelles et compétences pratiques",
+      "tags": [
+        "Bricolage",
+        "Couture",
+        "Menuiserie",
+        "Électronique DIY",
+        "Réparations",
+        "Créations manuelles"
+      ]
+    },
+    {
+      "name": "Culture culinaire et produits de terroir",
+      "tags": [
+        "Spécialités régionales",
+        "Marchés locaux",
+        "Cuisine régionale",
+        "Fromages",
+        "Pâtisserie artisanale"
+      ]
+    },
+    {
+      "name": "Autres passions et intérêts transversaux",
+      "tags": [
+        "Curiosité",
+        "Découvrir de nouvelles choses",
+        "Projets personnels",
+        "Nouvelles expériences",
+        "Apprendre ensemble"
+      ]
+    }
+  ]
+}

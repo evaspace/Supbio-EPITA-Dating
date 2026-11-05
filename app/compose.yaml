@@ -1,0 +1,65 @@
+# Deployment behind the existing Caddy of /opt/pierref (jeudi.pierref.eu -> 192.168.1.64:8010).
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://campus:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/campus
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      COOKIE_SECURE: "true"
+      DEV_OTP: "false"
+      REQUIRE_ACCOUNT_APPROVAL: "true"
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?Set ADMIN_EMAILS}
+      SITE_ORIGIN: https://${DOMAIN:?Set DOMAIN}
+      TRUST_PROXY_IP: "true"
+      MEDIA_DIR: /data/uploads
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:?Set SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?Set SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM}
+    volumes:
+      - user_photos:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=2)"]
+      interval: 20s
+      timeout: 5s
+      retries: 8
+      start_period: 25s
+    ports:
+      - "192.168.1.64:8010:8000"
+    networks: [front, back]
+    security_opt:
+      - no-new-privileges:true
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: campus
+      POSTGRES_USER: campus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus -d campus"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [back]
+    security_opt:
+      - no-new-privileges:true
+networks:
+  front:
+  back:
+    internal: true
+volumes:
+  postgres_data:
+  user_photos:

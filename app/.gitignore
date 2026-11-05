@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite*
+__pycache__/
+.pytest_cache/
+*.pyc
+private_uploads/
+.DS_Store
